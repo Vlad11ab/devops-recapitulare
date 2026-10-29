@@ -1,0 +1,33 @@
+services:
+  online-shop-mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "4002:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  online-shop-service:
+    image: vlad11ab/vlad-shop:0.1
+    ports:
+      - "9003:8082"
+    environment:
+      DB_URL: "jdbc:mysql://online-shop-mysql:3306/online_shop_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_DOCS_TITLE: Vlad school
+    depends_on:
+      online-shop-mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
